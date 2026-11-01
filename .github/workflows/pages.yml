@@ -38,9 +38,7 @@ jobs:
       - name: Install locked dependencies
         run: npm ci
       - name: Build atlas for the repository URL
-        run: |
-          npm exec vite build -- --config src/ui/vite.config.js --base=/AI-knowledge/
-          cp dist-ui/atlas.html dist-ui/index.html
+        run: npm run build -- --base=/AI-knowledge/
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

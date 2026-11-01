@@ -1,5 +1,7 @@
 # 项目说明 · 神奇科学AI知识图册
 
+当前运行入口统一为前端工程根路径 `/`；`npm run dev`、`npm run build`、`npm run preview`及Pages发布使用同一份根vite.config.js。index.html为唯一页面，atlas.html兼容旧链接；三节点安装测试移至开发路径/tests/smoke/。安装和运行只需要Node.js与npm，不依赖个人工具目录。
+
 > 更新：2026-11-01（触屏点击修复、默认展开、更名）｜ **当前图册可直接访问：[GitHub Pages在线预览](https://gethlx.github.io/AI-knowledge/)。本轮修复触屏轻微移动被误判拖拽的问题，进入页面默认展开关系网，页面与仓库文本图册名统一为“神奇科学AI知识图册”；Chromium触屏模拟通过，微信内置浏览器实机修复效果待复测。60号主题导航与变更摘要仍是规划，未实现。G_v2原包未覆盖。**
 
 ## 项目与当前阶段

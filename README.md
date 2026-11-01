@@ -61,24 +61,27 @@ npm run dev
 确认终端显示Vite启动成功后，**保持终端运行，在同一台电脑的浏览器地址栏手动输入**：
 
 ```text
-http://127.0.0.1:41839/atlas.html
+http://127.0.0.1:41839/
 ```
 
 `127.0.0.1`代表正在使用的那台电脑。没有启动服务、关闭了终端，或换到手机和另一台电脑，这个地址都不能访问刚才运行的图册。安装依赖需要联网；遇到启动报错，应先处理终端中的错误。
 
-请使用 `/atlas.html` 入口；根路径 `/` 下的 `index.html` 是早期安装测试页。直接双击源码中的 `atlas.html` 也不能替代以上启动步骤。
+根路径 `/` 就是完整图册。旧的 `/atlas.html` 地址会自动跳转，并保留词条和页面参数。直接双击源码中的HTML文件不能替代以上启动步骤。
 
 ### 构建可托管的静态版本
 
 在上述开发目录中执行：
 
 ```bash
-npm exec vite build -- --config src/ui/vite.config.js
+npm run build
+npm run preview
 ```
 
-输出位于开发目录的 `dist-ui/`，其中 `atlas.html` 是页面入口。将整个目录交给静态文件服务即可访问；单独执行构建不会更新在线预览。默认的 `npm run build` 面向早期测试入口，构建知识图册请使用上面的专用命令。
+构建输出位于开发目录的 `dist-ui/`，`index.html` 是首页。预览服务启动后，打开终端显示的根地址即可；它与开发模式使用同一套图册源码。将整个 `dist-ui/` 目录交给静态文件服务即可托管，不能只上传HTML。默认使用相对资源路径；部署到固定子路径时，可用 `npm run build -- --base=/你的子路径/` 指定路径。单独执行本地构建不会更新本仓库的在线预览。
 
-本仓库的[Pages发布流程](.github/workflows/pages.yml)在 `main` 上的图册工程或工作流更新后自动运行，也可从GitHub Actions手动触发。它按 `/AI-knowledge/` 路径构建，仅发布 `dist-ui/`，并生成同内容的首页 `index.html`；不会发布整个项目目录。发布不依赖本机的 `127.0.0.1` 服务。
+本仓库的[Pages发布流程](.github/workflows/pages.yml)在 `main` 上的图册工程或工作流更新后自动运行，也可从GitHub Actions手动触发。它执行相同的 `npm run build`，只附加 `/AI-knowledge/` 部署路径，并仅发布 `dist-ui/`。本地开发、构建预览和在线版本共用根目录的 `vite.config.js`，无需人工复制首页。发布不依赖本机的 `127.0.0.1` 服务。
+
+早期三节点安装测试保留在开发服务的 `/tests/smoke/`，不作为默认首页，也不包含在图册发布包中。历史设计稿、备份及正式关系数据包用途不同，不是其他产品入口。
 
 ### 单独的关系图文件
 
@@ -107,7 +110,7 @@ npm exec vite build -- --config src/ui/vite.config.js
 | 当前关系数据：G_v2，版本标识 `0bd1a09cd159` | [graph.json](03_交付物/G_v2_模型裁定版/graph.json) |
 | 页面渲染副本 | [preview-data.json](02_分析产物/图谱浏览器开发环境/src/ui/preview-data.json) |
 | 页面交互与三维场景 | [atlas-preview.js](02_分析产物/图谱浏览器开发环境/src/ui/atlas-preview.js) |
-| 页面结构与样式 | [atlas.html](02_分析产物/图谱浏览器开发环境/atlas.html)、[atlas.css](02_分析产物/图谱浏览器开发环境/src/styles/atlas.css) |
+| 页面结构与样式 | [index.html](02_分析产物/图谱浏览器开发环境/index.html)、[atlas.css](02_分析产物/图谱浏览器开发环境/src/styles/atlas.css) |
 
 维护时先明确要修改的内容来源，再同步页面副本、核对变更并验证相关操作。不要只修改渲染副本而遗漏来源。关系方向以 `effective_source` / `effective_target` 为准。现有内容与关系可以按实际教学需要修订，历史版本保留供比较和恢复。
 

@@ -1,6 +1,6 @@
 # Codex HTML与WorkBuddy接口交接（53号）
 
-本地入口：http://127.0.0.1:41839/atlas.html。`?view=explore`仅表示打开大图，不再表示另一套正文页面；`#card_id`为内部深链，编号不向读者展示。50号交互与52号视觉均已获用户确认；当前53号准备工程交接，52号调整高亮/线宽/透明度，完整197/1562场景＋随视野显示名称保持。49号的一跳场景/选中邻居标签优先/运动中隐藏其他标签已作废；49号相邻分组、47号连续阅读及48号导航简化保留。
+当前正式浏览入口：http://127.0.0.1:41839/ 。根index.html是唯一图册页面，atlas.html仅兼容旧链接并携带query/hash跳转。默认展开关系网与解释说明；?view=reading可收起图，#card_id为内部深链，编号不向读者展示。下文保留历史交接记录；当前启动、构建与预览以工程README和根vite.config.js为准。
 
 ## 当前页面与内容
 
@@ -26,10 +26,10 @@
 
 ## 文件和接口
 
-- atlas.html / src/styles/atlas.css：页面骨架、视觉、原地details及大图/缩略容器。
-- src/ui/atlas-preview.js：可替换的预览控制器。唯一HTML渲染控制器，不是WB正式src/data、src/graph或src/state。
+- index.html / src/styles/atlas.css：唯一页面骨架、视觉、原地details及大图/缩略容器。atlas.html为旧链接跳转。
+- src/ui/atlas-preview.js：当前图册的运行控制器，文件名保留历史命名；开发与线上共用，不要求另行集成一套未发布实现。
 - src/ui/preview-data.json：197卡/1562边只读副本；public/assets：独立字体、纸山背景及许可。
-- src/ui/vite.config.js：独立atlas构建，dist-ui；原index.html/smoke.js与默认安装测试入口保留。
+- vite.config.js：开发、构建和预览的共同配置，输出dist-ui/index.html；src/ui/vite.config.js仅转导共同配置以兼容旧命令。三节点测试位于tests/smoke/，不参与产品构建。
 
 | API | 最新语义 |
 |---|---|
@@ -49,7 +49,7 @@ atlas:selection和atlas:mode事件保留。#graph-surface整体移到缩略或�
 
 WB正式整合采用50号完整场景/视野标签、52号高亮/线宽与49号相邻分组。47–49号的局部一跳数据裁剪及选中邻居优先标签策略已作废；保留阅读原地展开和点击单次定位。源/状态/性能/WebGL回退仍需正式工程验收。未派发消息、未发布。
 
-运行：./tools.sh npm run dev，打开/atlas.html；构建：./tools.sh npm exec vite build -- --config src/ui/vite.config.js。
+运行：npm run dev，打开根路径/；构建：npm run build；构建预览：npm run preview。
 
 
 2026-10-02 · 52号补充：逐边核对当前概念15条直接边仅15条加粗；切换后49条直接边仅49条加粗，错分0。普通线进一步调整为0.6px/48%，直接线保持1.6px/94%。交互保持，待用户观看。
