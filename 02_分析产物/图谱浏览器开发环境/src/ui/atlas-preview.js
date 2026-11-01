@@ -142,7 +142,8 @@ function renderCard(){
   $('#definition').textContent=f['精确定义'];
   $('#explanation-copy').innerHTML=explanationHTML(selected);
   $('#explanation').hidden=!$('#explanation-copy').textContent.trim();
-  $('#explanation').open=saved.get(selected)?.explanation??mode==='reading';
+  $('#explanation').open=saved.get(selected)?.explanation??true;
+  $('#explanation-toggle').textContent=$('#explanation').open?'收起说明':'展开阅读';
   $('#neighbor-count').textContent=neighborTotal(selected);
   renderNeighbors();
   $('#neighbors').open=saved.get(selected)?.neighbors??true;
@@ -151,12 +152,17 @@ function renderCard(){
   syncLabels();document.dispatchEvent(new CustomEvent('atlas:selection',{detail:{id:selected}}));
 }
 function renderNeighbors(){
-  const groups=neighbors(selected);
-  $('#neighbor-list').innerHTML=Object.entries(groups).map(([key,items])=>{
+  const groups=Object.entries(neighbors(selected)).filter(([,items])=>items.length);
+  const single=groups.length===1;
+  const help={before:'理解本概念前，可先了解以下概念。',after:'以下概念以本概念为基础。',related:'以下概念与本概念直接关联。'};
+  $('#neighbor-help').textContent=(single?help[groups[0][0]]:'以下概念按关系分组。')+'点开名称即可在此阅读。';
+  $('#neighbor-help').hidden=!groups.length;
+  $('#neighbor-list').innerHTML=groups.map(([key,items])=>{
     const rows=items;
     if(!rows.length)return '';
-    const heading={before:'先了解这些概念',after:'以它为基础',related:'其他关联'}[key];
+    const heading={before:'先了解这些概念',after:'以它为基础',related:'相关联的概念'}[key];
     const content=rows.map(n=>'<details class="neighbor-card" data-neighbor="'+esc(n.id)+'"><summary class="neighbor-item"><i class="ph ph-file-text" aria-hidden="true"></i><span>'+esc(name(n.id))+'</span><i class="ph ph-caret-down disclosure" aria-hidden="true"></i></summary><div class="neighbor-reading"></div></details>').join('');
+    if(single)return content;
     return '<details class="neighbor-group" data-group="'+key+'"'+(key==='related'?'':' open')+'><summary class="neighbor-group-heading"><h3>'+heading+' · '+rows.length+'</h3><i class="ph ph-caret-down disclosure" aria-hidden="true"></i></summary>'+content+'</details>';
   }).join('')||'<p class="empty">暂无相邻概念。</p>';
   // 恢复该概念离开时的分组与词条展开态(旧历史条目无此字段则保持默认策略)。
