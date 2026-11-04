@@ -21,12 +21,13 @@ All application paths below are relative to `02_分析产物/图谱浏览器开�
 - `src/ui/atlas-preview.js`: connects the overlay to reading, search, filters, connected cards, the existing 3D scene, and accessibility labels.
 - `index.html` and `src/styles/atlas.css`: language controls, translated static interface, and responsive English text layout.
 - `tests/i18n.test.mjs`: translation coverage, source integrity, language precedence, blocked storage, label wrapping, and static UI text checks.
+- `tests/history-language.browser.mjs`: Chromium touch regression for language/history consistency, graph and reading preservation, reload/shared URLs, search, filters, and 320px/390px layouts.
 
 ## Translation quality
 
 The card text is a **machine-translated draft** of the Chinese source, produced once using Google Translate. It is bundled with the website: visitors do not call a translation API, send their searches to a translation service, or need an API key.
 
-The interface was translated separately. Cards 3-13 (Probability / Uncertainty), 3-14 (Generalization), and 4-03 (Large Language Model) received targeted editorial corrections; this does not certify the entire collection. All 197 cards still need a full educational and terminology review. The interface identifies English content as a draft. Secondary concept names remain Chinese to help bilingual readers compare terms.
+The interface was translated separately. Cards 3-13 (Probability / Uncertainty), 3-14 (Generalization), and 4-03 (Large Language Model) received targeted editorial corrections; this does not certify the entire collection. All 197 cards still need a full educational and terminology review. Review concept names and precise definitions first, then explanations and examples. Coverage checks and a successful build do not constitute semantic approval; translation review is separate from interaction fixes. The interface identifies English content as a draft. Secondary concept names remain Chinese to help bilingual readers compare terms.
 
 The `_meta.source_sha256` value identifies the Chinese source used. If Chinese content changes, update the matching English fields and that fingerprint; the coverage test deliberately detects a stale translation baseline. The English overlay is the maintained source of English wording, so corrections should be made there rather than in compiled files.
 
@@ -40,6 +41,14 @@ npm run build
 ```
 
 The project retains its original npm manifest and lockfile; no new runtime dependencies or credentials are needed.
+
+For the browser regression, install the optional test tooling in an isolated checkout (`npm install --no-save --package-lock=false playwright`, then `npx playwright install chromium`). Start `npm run dev` in one terminal, then run in another:
+
+```sh
+ATLAS_BASE_URL=http://127.0.0.1:41839/ node --test tests/history-language.browser.mjs
+```
+
+The same test can target a production-preview server through `ATLAS_BASE_URL`. To use an already installed Chrome/Chromium binary, set `ATLAS_CHROMIUM_EXECUTABLE` to its absolute executable path; otherwise Playwright uses its managed Chromium installation. In headless environments without usable GPU/WebGL acceleration, `ATLAS_SOFTWARE_WEBGL=1` selects Chromium’s SwiftShader software renderer for these tests. This validates functionality, not hardware GPU performance. It uses fresh Chromium contexts with touch emulation at 320px and 390px. It follows the English 3-13 → search → 4-03 → switch to Chinese → Back → Forward sequence, then checks both entries after reload and by opening copied URLs with fresh storage. A further case covers stored preferences on URLs without a language parameter, immediate Back after a language toggle, and distinct reading snapshots for repeated visits to the same concept. It checks interface/card text and rendered graph labels, preserves manual disclosures and graph geometry during switching/navigation, and verifies the Chinese default, bilingual search, and level filtering. Touch emulation is not a physical-device performance test.
 
 ## Bringing this into the original website
 
