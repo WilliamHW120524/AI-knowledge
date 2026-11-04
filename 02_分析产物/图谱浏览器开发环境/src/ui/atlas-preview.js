@@ -132,7 +132,7 @@ function neighborSnapshot(){
           cards:[...document.querySelectorAll('#neighbor-list .neighbor-card[open]')].map(d=>d.dataset.neighbor)};
 }
 function saveReading(){saved.set(selected,{scroll:window.scrollY,explanation:$('#explanation').open,neighbors:$('#neighbors').open,neighborState:neighborSnapshot()})}
-function snapshot(){return {selected,focus,mode,camera:cameraState(),reading:{scroll:window.scrollY,explanation:$('#explanation').open,neighbors:$('#neighbors').open,neighborState:neighborSnapshot()}}}
+function snapshot(){return {selected,focus,mode,language:getLanguage(),camera:cameraState(),reading:{scroll:window.scrollY,explanation:$('#explanation').open,neighbors:$('#neighbors').open,neighborState:neighborSnapshot()}}}
 const explanationKeys=['教学类比','典型案例','常见误解','反例','安全与伦理边界'];
 function explanationHTML(id){
   const f=fieldsFor(cards.get(id));
@@ -182,9 +182,9 @@ function renderNeighbors(){
 function selectConcept(id){
   if(!cards.has(id))return false;
   if(id!==selected){
-    saveReading();history.replaceState(historySnapshot(),'',location.hash);
+    saveReading();history.replaceState(historySnapshot(),'',historyUrl());
     selected=id;
-    renderCard();history.pushState(historySnapshot(),'', '#'+id);
+    renderCard();history.pushState(historySnapshot(),'',historyUrl());
   }
   closeBrowser();
   if(graphReady){
@@ -195,9 +195,21 @@ function selectConcept(id){
 }
 // 前进/后退: 条目state实时同步(概念/展开/滚动/相机), 双向一致恢复。
 function historySnapshot(){const s=snapshot();s.atlas=true;return s}
+function historyUrl(){
+  const url=new URL(location.href);
+  // Every entry is shareable, including visits that originally used a stored preference.
+  url.searchParams.set('lang',getLanguage());url.hash=selected;
+  return url;
+}
+function historyLanguage(state){
+  const requested=new URLSearchParams(location.search).get('lang');
+  if(requested==='en'||requested==='zh')return requested;
+  // Older entries may lack a locale. Never let a later preference change reinterpret them.
+  return state.language==='en'?'en':'zh';
+}
 let syncTimer;
 // 离散展开动作即时写入历史条目(不走防抖, 快速后退不丢最近状态); 滚动/相机保持250ms节流。
-function syncHistoryStateNow(){clearTimeout(syncTimer);history.replaceState(historySnapshot(),'',location.hash)}
+function syncHistoryStateNow(){clearTimeout(syncTimer);history.replaceState(historySnapshot(),'',historyUrl())}
 function syncHistoryState(){
   clearTimeout(syncTimer);
   syncTimer=setTimeout(syncHistoryStateNow,250);
@@ -206,13 +218,15 @@ window.addEventListener('popstate',e=>{
   const next=e.state;
   if(!next||!next.atlas)return;
   clearTimeout(syncTimer);
+  setLanguage(historyLanguage(next),languageStorage);
   selected=next.selected;
   if(focus!==next.focus){focus=next.focus;renderGraphData()}
   if(next.reading)saved.set(next.selected,next.reading);
-  renderCard();setMode(next.mode,false);
+  renderLanguage();setMode(next.mode,false);
   restoreCamera(next.camera);preferredLabels=localNeighbors();syncLabels();window.scrollTo(0,next.reading?.scroll??0);
+  syncHistoryStateNow();
 });
-history.replaceState(historySnapshot(),'',location.pathname+location.search+'#'+selected);
+history.replaceState(historySnapshot(),'',historyUrl());
 window.addEventListener('scroll',syncHistoryState,{passive:true});
 // open属性/清单变化经MutationObserver在微任务级同步(早于任何后续导航任务, 覆盖用户点击与程序设置);
 // 不依赖异步排队的toggle事件。恢复DOM引发的属性变化在导航流程完成后触发, 写入的是当前(正确)条目且幂等。
@@ -321,10 +335,8 @@ function renderGraphData(){
 function renderAccessibleNodes(list){
   labels.innerHTML=list.map(n=>'<button class="graph-a11y-node" data-concept="'+esc(n.id)+'" aria-label="'+esc(t('阅读')+n.name)+'">'+esc(n.name)+'</button>').join('');
 }
-function switchLanguage(value=getLanguage()==='en'?'zh':'en'){
-  const scroll=window.scrollY;
-  saveReading();
-  setLanguage(value,languageStorage);
+// Rendering a restored locale must not save outgoing reading state or navigate.
+function renderLanguage(){
   applyDocumentLanguage();
   renderCard();
   // Relabel the existing scene without resetting the graph layout or camera.
@@ -349,9 +361,12 @@ function switchLanguage(value=getLanguage()==='en'?'zh':'en'){
   $('#pause').setAttribute('aria-label',t(rotating?'暂停旋转':'开始缓慢旋转'));
   const error=$('#graph-error');if(error.dataset.errorKey)error.textContent=t(error.dataset.errorKey);
   $('#notice').hidden=true;
-  const url=new URL(location.href);url.searchParams.set('lang',getLanguage());
-  history.replaceState(historySnapshot(),'',url);
-  requestAnimationFrame(()=>window.scrollTo(0,scroll));
+}
+function switchLanguage(value=getLanguage()==='en'?'zh':'en'){
+  const scroll=window.scrollY;
+  saveReading();setLanguage(value,languageStorage);renderLanguage();
+  // Restore synchronously: a queued callback could overwrite a subsequent Back/Forward scroll.
+  window.scrollTo(0,scroll);syncHistoryStateNow();
 }
 function resizeGraph(){
   if(!graph)return;
